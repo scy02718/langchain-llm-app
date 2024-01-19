@@ -1,6 +1,6 @@
 import streamlit as st
 import random
-import util.chatAPI as lms
+import util.googleAPI as lms
 
 st.set_page_config(page_title="Sentiment Modifier", page_icon="🙂")
 st.title("Text Sentiment Modifier")
@@ -32,6 +32,7 @@ text_length = st.slider("Select the maximum length of the output text:", 10, 500
 # Submit Button
 if st.button("Submit"):
     if text_input:
+        # Using chatAPI because googleAPI does not allow some rude languages to be generated
         modified_text = lms.modify_sentiment(text_input, selected_tone, selected_sentiment, strength, text_length)
         st.success(modified_text)
     else:

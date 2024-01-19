@@ -1,6 +1,6 @@
 import streamlit as st
 import random
-import util.chatAPI as lms
+import util.googleAPI as lms
 
 st.set_page_config(page_title="Generative AI Detector", page_icon="🕵️")
 st.title("Generative AI Detector")

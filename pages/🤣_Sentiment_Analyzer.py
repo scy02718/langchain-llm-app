@@ -1,6 +1,6 @@
 import streamlit as st
 import random
-import util.chatAPI as lms
+import util.googleAPI as lms
 
 st.set_page_config(page_title="Sentiment Analyzer", page_icon="🤣")
 st.title("Text Sentiment Analyzer")

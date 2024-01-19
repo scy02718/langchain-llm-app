@@ -59,10 +59,10 @@ def determine_importance(input_dict):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are a journalist. You want to gather information about a topic, from different news articles. Since there are a lot of different articles
-         and you don't have time to read all of them, you want to determine the importance of each article."""),
-        ("user", """{input_dict} are the news articles, paired between title and description. Determine the importance of each article and also a short summary. 
-        The importance is on a scale from 0 to 10. 0 means not important and 10 means very important.
-        Explicitly tell me by saying Importance - "importance" next to the summary of the article.""")
+         and you don't have time to read all of them, you want to determine the importance of each article. Only return the importance, nothing else"""),
+        ("user", """{input_dict} are the news articles, paired between title and description. Determine the importance of each article. 
+        The importance is on a scale from 0 to 10. 0 means not important and 10 means very important. 
+        Always return in this format : Importance - "importance": description of the article. Don't add anything else!""")
     ])
 
     chain = LLMChain(llm=model, prompt=prompt)

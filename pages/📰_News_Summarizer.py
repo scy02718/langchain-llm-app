@@ -4,7 +4,7 @@
 # Display the news article in the order of importance
 
 import streamlit as st
-import util.chatAPI as lms
+import util.googleAPI as lms
 from newsdataapi import NewsDataApiClient
 
 api = NewsDataApiClient(apikey="pub_366235dffe4f1b254011a6776daa8c8d965e7")
@@ -39,6 +39,9 @@ selected_categories = st.multiselect(
     "Select the categories:", category_names, 
     max_selections=5)
 
+# Domain range Slider
+priority = st.slider("Select the domain ranges of the news. Higher the value, more narrower the range:", 0.0, 10.0, 5.0, step=0.1)
+
 # Submit Button
 if st.button("Submit"):
     country_codes = [country_dict[country] for country in selected_countries]
@@ -49,28 +52,28 @@ if st.button("Submit"):
     if not category_codes:
         category_codes = None
     
-    response = api.news_api(q=keyword_input, country=country_codes, category=category_codes,
+    if priority > 6.6:
+        priority = "top"
+    elif priority > 3.3:
+        priority = "medium"
+    else:
+        priority = "low"
+    
+    response = api.news_api(q=keyword_input, country=country_codes, category=category_codes, prioritydomain=priority,
                             full_content=True)
     
     results = response['results']
     # Filter only the title, link and content
     results = [{'title': result['title'], 'link': result['link'], 'description': result['description']} for result in results]
-
     chat_result = lms.determine_importance(results)
-    chat_result_list = chat_result.split("\n")
-
-    print(results)
-    print(chat_result_list)
-    print(chat_result)
-
-    # Extract the number
-    importance_list = [float(importance.split(" ")[2][:-1]) for importance in chat_result_list]
     
-    # Extract the summary
-    summary_list = [importance.split(" ")[3:] for importance in chat_result_list]
+    # Chat result will be a string of numbers separated by commas
+    # Split the string by comma and convert each element to float
+
+    importance_list = [float(importance) for importance in chat_result.split(",")]
 
     # Combine results, importance_list and summary_list
-    results = [{'title': result['title'], 'link': result['link'], 'description': result['description'], 'importance': importance, 'summary': summary} for result, importance, summary in zip(results, importance_list, summary_list)]
+    results = [{'title': result['title'], 'link': result['link'], 'description': result['description'], 'importance': importance} for result, importance in zip(results, importance_list)]
     # Sort the results by importance
     results = sorted(results, key=lambda result: result['importance'], reverse=True)
 
@@ -78,7 +81,7 @@ if st.button("Submit"):
     for result in results:
         st.markdown(f"### {result['title']}")
         st.write(f"[Link]({result['link']})")
-        st.write(result['summary'])
+        st.write(result['description'])
         st.markdown("---")
     
 
