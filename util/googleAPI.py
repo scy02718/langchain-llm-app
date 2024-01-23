@@ -33,6 +33,15 @@ def get_safety_settings():
 
     return safety_settings
 
+def paint_generation_config():
+    generation_config = {
+            "temperature" : 1.0,
+            "top_p" : 1.0,
+            "top_k" : 40,
+        }
+    
+    return generation_config
+
 def modify_sentiment(text_input, selected_tone, selected_sentiment, strength, text_length):
     model = genai.GenerativeModel("gemini-pro")
     
@@ -142,6 +151,26 @@ def determine_importance(input_dict):
     result = model.generate_content(messages, safety_settings = get_safety_settings())
     return result.text
 
+def paint_captioning(image):
+    model = genai.GenerativeModel("gemini-pro-vision", generation_config=paint_generation_config())
+
+    messages = ["""This is a painting. Write a short caption on this painting, such as what you think it is.
+                Also comment on how old you think the painter would be""", image]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def paint_analysis(image):
+    model = genai.GenerativeModel("gemini-pro-vision", generation_config=paint_generation_config())
+
+    messages = ["""This is a painting. Analyze this painting in depth. Talk about the emotions, the complexity of the line structures,
+                symbolic meanings and the social impact of the painting. Talk about which artistic movement this painting belongs to.
+                Focus on the symbolic meaning. Comment on how amazing the painting is""", image]
+    
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+
 
 def image_captioning(image):
     model = genai.GenerativeModel("gemini-pro-vision")
@@ -211,9 +240,11 @@ def get_sentence(language, level, num_sentences):
                   and should be {level} level. All {num_sentences} sentences should be completely different context, and beneficial for learning.
                   The output should be in this format : 
                   1. Sentence 1
-                  2. Sentence 2
-                  3. Sentence 3
-                  4. Sentence 4
+                  2. Sentence 2 (If more than one sentence)
+                  3. Sentence 3 (If more than two sentences)
+                  4. Sentence 4 (If more than three sentences)
+                  and so on.
+                  NEVER provide the english translation of the sentence, never provide more sentences than the number of sentences requested.
                   """]}
     ]
 
@@ -230,20 +261,130 @@ def evaluate_translation(sentences, translations, language, level):
                   How well did I do? Considering my level, for each of my translation, rate my translation on a scale from 0 to 10. 
                   0 means completely wrong, and 10 means completely correct.
 
-                  If I am more fluent in this language, you must be more strict on me.
+                  If I am more fluent in this language, you must be more strict on me. Be as strict as possible.
                   Also, if the translation is not yet perfect, for each translation, tell me which part of the translation is wrong, 
-                  and how I can improve it. Finally, for each sentence, provide me with a good translation of the sentence, so that I can learn from it. 
+                  and how I can improve it. Finally, for each sentence, provide me with a good translation of the sentence in English, so that I can learn from it. 
                   
                   The output format should be:
                   Sentence 1 : 
                   1. Rating : 5 / 10
                   2. Feedback : The translation is wrong because ...
-                  3. Good translation : The good translation is ...
+                  3. Good translation : The good translation in English is ...
 
-                  Sentence 2 : 
-                  1. Rating : 8 / 10
+                  Sentence 2 :
+                  1. Rating : 10 / 10
+                  2. Feedback : The translation is good because ...
+                  3. Good translation : The good translation in English is ...
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def get_words(language, level, num_words):
+    model = genai.GenerativeModel("gemini-pro")
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am learning {language} at {level} level. I want to practice my vocabulary.
+                  Give me {num_words} words in {language} that I can translate to English. The words should be at {level} level, and
+                  must be a single word. It should be a good word for a person at {level} level to learn.
+                  All {num_words} words should be completely different context, and beneficial for learning.
+                  The output should be in this format : 
+                  1. Word 1
+                  2. Word 2 (If more than one word)
+                  3. Word 3 (If more than two words)
+                  4. Word 4 (If more than three words)
+                  and so on.
+                  NEVER provide the english translation of the word, never provide more words than the number of words requested.
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def evaulate_words(words, answers, language, level):
+    model = genai.GenerativeModel("gemini-pro")
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am learning {language} at {level} level. I want to practice my vocabulary.
+                  I have translated these words : {words} into {answers}. The numbers will be corresponding
+                  How well did I do? Considering my level, for each of my translation, rate my translation on a scale from 0 to 10. 
+                  0 means completely wrong, and 10 means completely correct.
+
+                  If I am more fluent in this language, you must be more strict on me. Be as strict as possible.
+                  Also, if the translation is not yet perfect, for each translation, tell me which part of the translation is wrong, 
+                  and how I can improve it. Finally, for each word, provide me with a good translation of the word in English, 
+                  so that I can learn from it. The provided translation should be as advanced as possible. Even if the translation is correct,
+                  if there is a more advanced translation, you should provide it.
+
+                  The output format should be:
+                  Word 1 : 
+                  1. Correct / Incorrect
                   2. Feedback : The translation is wrong because ...
-                  3. Good translation : The good translation is ...
+                  3. Suggestion : (Better translation for the word)
+
+                  Word 2 :
+                  1. Correct / Incorrect
+                  2. Feedback : The translation is wrong because ...
+                  3. Suggestion : (Better translation for the word)
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def translate_code(input_code, input_language, output_language):
+    model = genai.GenerativeModel("gemini-pro")
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a programmer who is working on old legacy code. I want to translate this code from
+                  {input_language} to {output_language}. I want to keep the behaviour of the code as similar as possible.
+                  The Code is : {input_code} in {input_language}. I want to translate it to {output_language}.
+                  Keep the behaviour of the code as similar as possible. The output should be in this format : 
+                  This is the translated result. <Short description of the behaviour of the code>
+                  <Output code>
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def solve_algorithm(question, input_language):
+    model = genai.GenerativeModel("gemini-pro")
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a programmer who is working on an algorithm problem. I want to solve this problem in {input_language}.
+                  The question is : {question}. The problem is complicated, but it gives number of expected inputs and output
+                  examples. Focus on fully understanding the problem by understanding the expected inputs and outputs.
+                  The output should be in this format : 
+                  This is the solution. <Short description of the behaviour of the code>
+                  <Output code>
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def create_prompt(input_problem):
+    model = genai.GenerativeModel("gemini-pro")
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a programmer who is using Gemini pro to solve a problem. However, I don't have enough time
+                  to write a detailed prompt for this problem. The problem is:
+                  {input_problem}
+                
+                  Make a Gemini-pro prompt for this problem. Make it so that it is very detailed, explains the problem and
+                  depth, and give examples of expected inputs and outputs. Explain the role of the AI model, such as a profressional
+                  translator if the task is related to translating a language.
+
+                  The output should be in this format
+                  I am a <role> who is interested in solving <input_problem>
+                  Solve this problem by <description and example of the problem>
                   """]}
     ]
 
