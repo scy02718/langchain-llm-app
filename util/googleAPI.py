@@ -460,3 +460,112 @@ def recipe_generator(input_ingredients, input_skill_level, input_time, input_cui
     result = model.generate_content(messages, safety_settings = get_safety_settings())
     return result.text
 
+def news_generator(input_topic, input_length, input_creativity, input_attractiveness, input_sentiment):
+    generation_config = {
+            "temperature" : input_creativity,
+            "top_p" : input_creativity,
+            "top_k" : int(40 * input_creativity),
+        }
+    
+    model = genai.GenerativeModel("gemini-pro", generation_config=generation_config)
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a professional journalist who is trying to write a news article on one of the biggest journals in the world. 
+                  I want to write a news article based on the topic that I have.
+                  The topic that I have is : {input_topic}. I want to write a news article that is {input_length} length, and {input_sentiment} sentiment.
+                  Make it professional. The title should be attractive on a scale of {input_attractiveness}, which is between 0 and 100. 
+                  0 is when the title is really bland and descriptive, and 100 is when the title is extremely attractive and clickbaity, so much that
+                  it makes the reader so curious that they can't resist clicking on the article.
+                  The output should be in this format : 
+                  <Title>
+                  <body>
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def teaching_planner(input_topic, input_length, input_age, input_level, input_type, input_style, input_creativity):
+    genration_config = {
+        "temperature" : input_creativity,
+        "top_p" : input_creativity,
+        "top_k" : int(40 * input_creativity),
+}
+
+    model = genai.GenerativeModel("gemini-pro", generation_config=genration_config)
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a teacher who is trying to make a teaching planner. I want to make a teaching planner based on the topic that I have.
+                  The topic that I have is : {input_topic}. I want to make a teaching planner that is {input_length} long. The students are 
+                  {input_age} years old and at {input_level} level for the topic. The teaching plan should consider that the lesson is {input_type} and 
+                  the teaching style is {input_style}. Make the teaching plan as detailed as possible, and do it so that the students feel that they have
+                  learned something, meaning it should be informative. The plan should outline what the teacher should do every minute of the lesson.
+                  The output should be in this format : 
+                  This is the teaching planner. <Short description of the teaching planner>
+                  <Output teaching planner>
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def plot_writer(input_target_audience, input_genre, input_type, input_length, input_ending, input_sentiment, input_plot, input_characters):
+    generation_config = {
+        "temperature" : 1.0,
+        "top_p" : 1.0,
+        "top_k" : 40,
+    }
+
+    model = genai.GenerativeModel("gemini-pro", generation_config=generation_config)
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a professional writer who is writing a detailed script for a {input_type}. The script should be very detailed,
+                  and should be {input_length} long. It should be a genre of {input_genre}, and the target audience is {input_target_audience}.
+                  Overall, the story should maintain a sentiment of {input_sentiment}. It should finally end with a {input_ending} ending. 
+                  I will provide some vague plot of how the story proceeds, and some description of the main characters. Using that, you should
+                  write a professional, detailed plot for me. The plot is {input_plot}, and the characters are {input_characters}.
+
+                  Be as creative as possible. You can make up events that I didn't provide in the plot. You can also make up characters that I didn't provide.
+
+                  The output should be in this format :
+                  <Episode 1> : <Short description of the episode>
+                  <Episode 2> : <Short description of the episode>
+                  <Episode 3> : <Short description of the episode>
+                  and so on.
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def song_writer(input_key, input_topic, input_genre, input_tempo, input_structure, input_complexity):
+    generation_config = {
+        "temperature" : 1.0,
+        "top_p" : 1.0,
+        "top_k" : 40,
+    }
+
+    model = genai.GenerativeModel("gemini-pro", generation_config=generation_config)
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a professional songwriter who is writing a song, both the lyrics and corresponding chord progression. I am an expert
+                  at music theory, so I want to use techniques such as 251, modal interchanges and tritone substitutions. The chord progression should be
+                  at {input_complexity} level. 0 is when the chord progression is very simple, and 100 is when the chord progression is so complex and advanced
+                  that it sounds like a professional jazz musician.
+                  I want to write a song based on the topic that I have.
+                  The topic that I have is : {input_topic}. I want to write a song that is in the key of {input_key}, and in the genre of {input_genre}.
+                  The song should be {input_tempo} tempo, and {input_structure} structure.
+                  In general, make it musically complex and sophisticated.
+                  The Lyrics should be easy to sing along.
+        
+                  Make it professional. The output should be in this format : 
+                  <Song>
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
