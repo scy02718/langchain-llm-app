@@ -27,13 +27,18 @@ if 'word_answer_list' not in st.session_state:
 # Session states for conversational AI
 if 'conversational_ai' not in st.session_state:
     st.session_state.conversational_ai = 0
-if 'user_input_list' not in st.session_state:
-    st.session_state.user_input_list = []
-if 'ai_response_list' not in st.session_state:
-    st.session_state.ai_response_list = []
+if 'messages_list' not in st.session_state:
+    st.session_state.messages_list = []
+if 'messages_with_feedback_list' not in st.session_state:
+    st.session_state.messages_with_feedback_list = []
+if 'user_updated' not in st.session_state:
+    st.session_state.user_updated = False
 
 def set_session_state(state_name, state_value):
     st.session_state[state_name] = state_value
+def set_conversation_state(state_name, state_value):
+    st.session_state[state_name] = state_value
+    st.session_state.user_updated = True
 def set_quiz_settings(mode, language, level, num):
     st.session_state.quiz_settings = {
         "mode": mode,
@@ -152,26 +157,62 @@ def vocabulary_test():
         st.button("Restart", on_click = reset_session_state)
 
 def conversational_ai():
-    print(st.session_state.conversational_ai)
+    if st.session_state.conversational_ai == 1:
+        print(st.session_state.messages_list)
 
     if st.session_state.conversational_ai >= 1:
-        col1, col2 = st.columns(2)
-        with col1:
-            language = st.session_state.quiz_settings["language"]
-            input_sentence = st.text_input("Enter the sentence:", on_change=answer_changed())
+        with st.container(height=500):
+            col1, col2 = st.columns(2)
+            with col1:
+                language = st.session_state.quiz_settings["language"]
+                level = st.session_state.quiz_settings["level"]
+                input_sentence = st.text_input("Enter the sentence (Press submit to start):")
 
-            if st.session_state.answer_changed:
-                st.session_state.user_input_list.append(input_sentence)
+                messages_list = st.session_state.messages_list
+                messages_with_feedback_list = st.session_state.messages_with_feedback_list
 
-                user_input_list = st.session_state.user_input_list
-                ai_response_list = st.session_state.ai_response_list
+                state = st.session_state.conversational_ai
+                st.button("Submit", on_click = set_conversation_state, args = ("conversational_ai", state+1))
+                if st.session_state.conversational_ai >= 2:
+                    print(st.session_state.messages_list)
 
-                st.button("Submit", on_click = set_session_state, args = ("conversational_ai", 2))
-        with col2:
-            st.write("Conversation:")
-            for i in range(len(user_input_list)):
-                st.success(f"User: {user_input_list[i]}")
+                    if st.session_state.messages_list == [] or st.session_state.messages_list[-1]["role"] == "model":
+                        st.session_state.messages_list.append({
+                            'role': 'user',
+                            'parts': [input_sentence]
+                        })
 
+                        st.session_state.messages_with_feedback_list.append({
+                            'role': 'user',
+                            'parts': [input_sentence]
+                        })
+
+                    ai_response = lms.conversational_ai(messages_list, language, level)
+
+                    ai_feedback = lms.conversational_ai_feedback(messages_with_feedback_list, language, level)
+                    
+                    st.session_state.messages_list.append({
+                         'role': 'model',
+                         'parts': [ai_response]
+                    })
+
+                    st.session_state.messages_with_feedback_list.append({
+                            'role': 'model',
+                            'parts': [ai_feedback]
+                    })
+
+                    st.success(ai_feedback)
+                    st.session_state.user_updated = False
+            with col2:
+                with st.container(height=460):
+                    if st.session_state.conversational_ai >= 2:
+                        st.write("Conversation:")
+                        for i in range(len(st.session_state.messages_list)):
+                            message = st.session_state.messages_list[i]
+                            if message["role"] == "user":
+                                st.success(message["parts"][0])
+                            else:
+                                st.warning(message["parts"][0])
 
 st.set_page_config(page_title="Language Perfect", page_icon="📷")
 st.title("Language Perfect")

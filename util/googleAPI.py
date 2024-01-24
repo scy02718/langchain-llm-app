@@ -6,7 +6,6 @@ load_dotenv()
 API_KEY = os.getenv("API_KEY")
 genai.configure(api_key = API_KEY)
 
-
 def get_safety_settings():
     safety_settings = [
         {
@@ -34,6 +33,15 @@ def get_safety_settings():
     return safety_settings
 
 def paint_generation_config():
+    generation_config = {
+            "temperature" : 1.0,
+            "top_p" : 1.0,
+            "top_k" : 40,
+        }
+    
+    return generation_config
+
+def recipe_generation_config():
     generation_config = {
             "temperature" : 1.0,
             "top_p" : 1.0,
@@ -132,7 +140,6 @@ def poem_analyzer(poem, age, language, formality, topic, paragraphs, length):
     result = model.generate_content(messages, safety_settings = get_safety_settings())
     return result.text
 
-
 def determine_importance(input_dict):
     model = genai.GenerativeModel("gemini-pro")
 
@@ -169,8 +176,6 @@ def paint_analysis(image):
     
     result = model.generate_content(messages, safety_settings = get_safety_settings())
     return result.text
-
-
 
 def image_captioning(image):
     model = genai.GenerativeModel("gemini-pro-vision")
@@ -335,6 +340,53 @@ def evaulate_words(words, answers, language, level):
     result = model.generate_content(messages, safety_settings = get_safety_settings())
     return result.text
 
+def conversational_ai(messages, language, level):
+    model = genai.GenerativeModel("gemini-pro")
+
+    initial_message = [{
+        'role':'user',
+        'parts' : [f"""I am learning {language} at {level} level. I want to practice my conversational skills.
+                    I want to talk to an AI in {language}. The AI should be able to understand me, and respond to me, in the same language.
+                    The AI should be able to understand my emotions, context and the topic of the conversation.
+                    Try to keep the responses at {level} level, and ask questions that are at {level} level.
+                    If I talk in language other than {language}, say "I don't understand" in {language}
+                    """]},
+        {
+        'role':'model',
+        'parts' : ["Okay, let's start the conversation"]}
+        ]
+
+    messages = initial_message + messages
+
+    print(messages)
+    
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
+def conversational_ai_feedback(messages, language, level):
+    model = genai.GenerativeModel("gemini-pro")
+
+    initial_message = [
+        {'role':'user',
+         'parts':[f"""I am learning {language} at {level} level. Rate my conversational skills. Do not give response
+                  to the conversation, only rate my conversational skills. The rating should be on a scale from 0 to 10.
+                  0 means completely wrong, and 10 means completely correct. If I am more fluent in this language, you must be more strict on me.
+                  Also provide some feedback on how I can improve my conversational skills, and good example.
+                  The response should be in this format
+                    1. Rating : 5 / 10
+                    2. Feedback : The translation is wrong because ...
+                    3. Good example : (Better translation for the word)
+                  """]},
+        {
+        'role':'model',
+        'parts' : ["Okay, let's start the conversation, I will try my best to give best feedback in the given format"]}
+    ]
+    
+    messages = initial_message + messages
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
 def translate_code(input_code, input_language, output_language):
     model = genai.GenerativeModel("gemini-pro")
 
@@ -390,3 +442,21 @@ def create_prompt(input_problem):
 
     result = model.generate_content(messages, safety_settings = get_safety_settings())
     return result.text
+
+def recipe_generator(input_ingredients, input_skill_level, input_time, input_cuisine, input_time_of_day, input_nutrition):
+    model = genai.GenerativeModel("gemini-pro", generation_config=recipe_generation_config())
+
+    messages = [
+        {'role':'user',
+         'parts':[f"""I am a chef who is trying to make a recipe. I want to make a recipe based on the ingredients that I have.
+                  The ingredients that I have are : {input_ingredients}. I want to make a recipe that is {input_skill_level} level,
+                  {input_time} long, {input_cuisine} cuisine, {input_time_of_day} meal, and {input_nutrition} nutrition.
+                  The output should be in this format : 
+                  This is the recipe. <Short description of the recipe>
+                  <Output recipe>
+                  """]}
+    ]
+
+    result = model.generate_content(messages, safety_settings = get_safety_settings())
+    return result.text
+
