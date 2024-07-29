@@ -39,7 +39,7 @@ selected_categories = st.multiselect(
     "Select the categories:", category_names, 
     max_selections=5)
 
-# Domain range Slider
+# Domain range Slider   
 priority = st.slider("Select the domain ranges of the news. Higher the value, more narrower the range:", 0.0, 10.0, 5.0, step=0.1)
 
 # Submit Button

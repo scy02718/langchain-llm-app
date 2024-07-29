@@ -55,7 +55,7 @@ def modify_sentiment(text_input, selected_tone, selected_sentiment, strength, te
     
     messages = [
         {'role' : 'user',
-         'parts': [f"""Keeping the same content, hange the sentiment of this text to both {selected_tone} while being
+         'parts': [f"""Keeping the same content, change the sentiment of this text to both {selected_tone} while being
                    {selected_sentiment}, with strength {strength} which is on a scale from 0 to 10.
                    Keep the information as similar as possible, and keep it around {text_length}: {text_input}"""]}
     ]
@@ -181,7 +181,7 @@ def image_captioning(image):
     model = genai.GenerativeModel("gemini-pro-vision")
 
     messages = ["Write a short caption on this picture. Make it as detailed as possible", image]
-
+        
     result = model.generate_content(messages, safety_settings = get_safety_settings())
     return result.text
     
@@ -555,7 +555,7 @@ def song_writer(input_key, input_topic, input_genre, input_tempo, input_structur
          'parts':[f"""I am a professional songwriter who is writing a song, both the lyrics and corresponding chord progression. I am an expert
                   at music theory, so I want to use techniques such as 251, modal interchanges and tritone substitutions. The chord progression should be
                   at {input_complexity} level. 0 is when the chord progression is very simple, and 100 is when the chord progression is so complex and advanced
-                  that it sounds like a professional jazz musician.
+                  that it sounds like a professional jazz musician. Make the chord progression very complicated!
                   I want to write a song based on the topic that I have.
                   The topic that I have is : {input_topic}. I want to write a song that is in the key of {input_key}, and in the genre of {input_genre}.
                   The song should be {input_tempo} tempo, and {input_structure} structure.
